@@ -1,0 +1,72 @@
+Archivo: app.c
+
+Este archivo implementa el ejecutor cíclico de tareas del sistema. 
+Es responsable de inicializar las tareas y actualizarlas periódicamente. 
+
+
+Tipos de datos definidos:
+
+1. task_cfg_t (estructura):
+   - Define la configuración de cada tarea.
+   - Contiene:
+        - Puntero a función de inicialización: void (*task_init)(void *)
+        - Puntero a función de actualización: void (*task_update)(void *)
+        - Puntero a parámetros de configuración: void *
+
+2. task_dta_t (estructura):
+   - Almacena el WCET (Worst Case Execution Time) de cada tarea.
+   - Campo:
+        - WCET: tiempo máximo de ejecución medido en microsegundos.
+
+---
+Arreglos de estructuras de datos:
+
+1. task_cfg_list[]:
+   - Array constante de tipo task_cfg_t.
+   - Contiene las funciones de inicialización y actualización de las tareas configuradas.
+   - En este proyecto, tiene una sola tarea: task_test.
+
+2. task_dta_list[]:
+   - Array de tipo task_dta_t.
+   - Almacena el WCET medido de cada tarea.
+
+---
+
+Variables globales:
+
+- g_app_cnt: contador general de ejecuciones del sistema.
+- g_app_time_us: tiempo total de ejecución de tareas en cada ciclo.
+- g_app_tick_cnt: tick count del ejecutor cíclico (controla la periodicidad).
+- p_sys y p_app: mensajes informativos impresos al iniciar el sistema.
+
+---
+
+Funciones definidas:
+
+1. app_init():
+   - Inicializa el sistema:
+     • Imprime mensajes por LOGGER_LOG().
+     • Inicializa los contadores.
+     • Llama a la función de inicialización de cada tarea.
+     • Inicializa el contador de ciclos (DWT).
+     • Desactiva y reactiva las interrupciones para asegurar una configuración estable.
+
+2. app_update():
+   - Ejecuta las tareas configuradas si hay un tick disponible.
+   - Por cada tarea:
+     • Llama a su función de actualización.
+     • Mide el tiempo de ejecución con `cycle_counter_*`.
+     • Actualiza el WCET si fue superado.
+     • Acumula el tiempo total del ciclo.
+
+3. HAL_SYSTICK_Callback():
+   - Callback del SysTick de HAL.
+   - Incrementa el tick de la app y el de la tarea `task_test`.
+
+---
+
+Comentarios:
+
+- El ejecutor cíclico usa el mecanismo de tick para decidir cuándo ejecutar las tareas.
+- A partir del WCET se puede evaluar el rendimiento temporal de cada tarea.
+- Es una arquitectura escalable: se pueden agregar más tareas al `task_cfg_list` y `task_dta_list`.

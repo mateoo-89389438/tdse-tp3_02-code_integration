@@ -1,0 +1,63 @@
+Archivo: task_test.c
+
+Este archivo implementa una tarea de prueba (test) que se integra al ejecutor cíclico bare-metal.
+Se encarga de mostrar en el LCD un mensaje de bienvenida y un contador que se incrementa periódicamente.
+
+Tipos de datos definidos:
+
+Variables globales:
+
+- task_test_dta (estructura): contiene un campo `tick` que controla el retardo entre actualizaciones.
+- g_task_test_cnt: contador general de ejecuciones de la tarea.
+- g_task_test_tick_cnt: contador de ticks externo que se incrementa desde el `SysTick`.
+- p_task_test, p_task_test_: punteros a cadenas con mensajes informativos.
+
+
+Funciones definidas:
+
+1. task_test_init():
+   - Inicializa el estado de la tarea.
+   - Muestra mensajes por consola usando `LOGGER_LOG()`.
+   - Inicializa el display LCD y escribe un mensaje fijo:
+     • Línea 0: "TdSE Bienvenidos"
+     • Línea 1: "Test Nro:"
+   - Inicializa el contador de ticks locales.
+
+2. task_test_update():
+   - Se llama periódicamente según el tick recibido desde `HAL_SYSTICK_Callback`.
+   - Incrementa el contador general `g_task_test_cnt`.
+   - Reduce el valor de `tick` hasta llegar a cero.
+   - Cuando `tick` llega a cero:
+     • Se reinicia a su valor máximo (1000).
+     • Se imprime en el LCD el valor actual del contador dividido por 1000 (cada 1 segundo).
+   - Protege los accesos a `g_task_test_tick_cnt` usando instrucciones ARM para desactivar y reactivar interrupciones (`CPSID i` / `CPSIE i`).
+
+
+Comentarios:
+
+- Es una tarea representativa para probar la integración entre el sistema de ejecución por eventos y el periférico LCD.
+- Utiliza una arquitectura “update-by-time” con protección contra condiciones de carrera.
+- Su frecuencia de actualización está controlada por una lógica de decremento de `tick`, iniciando en 0 y alcanzando 1000 para mostrar en display.
+
+
+
+Archivo: task_test_attribute.h
+
+Este archivo define la estructura de datos utilizada por la tarea `task_test`.
+
+Tipos de datos definidos:
+
+1. task_test_dta_t (estructura):
+   - Campo:
+     • tick (uint32_t): almacena el tiempo restante hasta la próxima actualización del display.
+
+
+Variables globales externas:
+
+- task_test_dta: instancia global de la estructura `task_test_dta_t`.
+
+Comentarios:
+
+- Este archivo permite separar la definición de atributos de la tarea de su lógica funcional.
+- Facilita mantener la tarea organizada y extensible.
+
